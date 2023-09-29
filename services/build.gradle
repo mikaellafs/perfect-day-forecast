@@ -1,0 +1,28 @@
+buildscript {
+    ext.kotlin_version = '1.6.21'
+//    ext.ktor_version = '1.6.8'
+//    ext.mockk_version = '1.10.6'
+
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+plugins {
+    id "org.jetbrains.kotlin.jvm" version "1.6.21" apply false
+}
+
+subprojects {
+    if (name == "applications" || name == "components") return
+
+    apply plugin: 'kotlin'
+
+    defaultTasks "clean", "build"
+
+    repositories {
+        mavenCentral()
+    }
+}
