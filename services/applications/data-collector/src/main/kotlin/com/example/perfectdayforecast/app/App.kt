@@ -4,7 +4,7 @@
 package com.example.perfectdayforecast.app
 
 import com.example.perfecdayforecast.collector.Location
-import com.example.perfecdayforecast.collector.WeatherForecastApiHandler
+import com.example.perfectdayforecast.collector.handlers.WeatherForecastApiHandler
 import java.time.LocalDate
 
 fun main() {

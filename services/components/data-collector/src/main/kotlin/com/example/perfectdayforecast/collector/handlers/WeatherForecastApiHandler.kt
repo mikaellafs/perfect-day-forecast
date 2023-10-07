@@ -1,5 +1,8 @@
-package com.example.perfecdayforecast.collector
+package com.example.perfectdayforecast.collector.handlers
 
+import com.example.perfectdayforecast.collector.models.Location
+import com.example.perfectdayforecast.collector.models.Units
+import com.example.perfectdayforecast.collector.models.WeatherForecastRegister
 import com.github.kittinunf.fuel.httpGet
 import com.github.kittinunf.result.Result
 import java.time.LocalDate
@@ -11,7 +14,8 @@ import com.google.gson.annotations.SerializedName
 
 //val baseUrl = "https://api.open-meteo.com/v1/forecast?latitude={latitude}&longitude={longitude}&daily=weathercode,temperature_2m_max,temperature_2m_min,rain_sum,snowfall_sum,precipitation_sum,precipitation_probability_max&timezone=auto&start_date={start_date}&end_date={end_date}"
 
-class WeatherForecastApiHandler(private val baseUrl: String, private var next: WeatherForecastHandler? = null) : WeatherForecastHandler {
+class WeatherForecastApiHandler(private val baseUrl: String, private var next: WeatherForecastHandler? = null) :
+    WeatherForecastHandler {
     override fun next(location: Location, startDate: LocalDate, endDate: LocalDate): List<WeatherForecastRegister>? {
         return next?.getData(location, startDate, endDate)
     }
@@ -51,13 +55,14 @@ class WeatherForecastApiHandler(private val baseUrl: String, private var next: W
 
     fun parseResult(result: WeatherApiResult, location: Location): List<WeatherForecastRegister> {
         val weatherForecastList: MutableList<WeatherForecastRegister> = mutableListOf()
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
         for (i in 0 until result.daily.weathercode.size) {
             weatherForecastList.add(
                 WeatherForecastRegister(
                     result.dailyUnits,
                     location,
-                    result.daily.time[i],
+                    LocalDate.parse(result.daily.time[i], formatter),
                     result.daily.weathercode[i],
                     result.daily.temperatureMax[i],
                     result.daily.temperatureMin[i],

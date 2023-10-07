@@ -1,4 +1,4 @@
-package com.example.perfecdayforecast.collector
+package com.example.perfectdayforecast.collector.models
 
 enum class Location(val city: String, val latitude: Double, val longitude: Double) {
     NEW_YORK("New York", 40.7128, -74.0060),
