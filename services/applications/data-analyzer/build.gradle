@@ -12,3 +12,15 @@ application {
     // Define the main class for the application.
     mainClass = 'com.example.perfectdayforecast.app.AppKt'
 }
+
+tasks.withType(Copy).all {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+distTar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+distZip {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
