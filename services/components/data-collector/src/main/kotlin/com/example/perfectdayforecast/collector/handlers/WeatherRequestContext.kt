@@ -8,5 +8,6 @@ class WeatherRequestContext(
     val location: Location,
     var startDate: LocalDate,
     var endDate: LocalDate,
-    var response: List<WeatherForecastRegister> = mutableListOf()
+    var response: List<WeatherForecastRegister> = mutableListOf(),
+    var shouldUpdateData: Boolean = false
 )

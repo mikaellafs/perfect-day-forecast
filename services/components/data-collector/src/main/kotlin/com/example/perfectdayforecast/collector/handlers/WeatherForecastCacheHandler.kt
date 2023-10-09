@@ -20,6 +20,7 @@ class WeatherForecastCacheHandler(private val dataGateway: MemoryCacheGateway, p
             currentDate = currentDate.plusDays(1)
         }
 
+        context.shouldUpdateData = false
         context.response = result
     }
 }

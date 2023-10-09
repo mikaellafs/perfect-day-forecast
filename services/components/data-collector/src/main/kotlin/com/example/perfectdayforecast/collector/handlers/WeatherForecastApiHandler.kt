@@ -12,8 +12,6 @@ import com.google.gson.Gson
 import com.github.kittinunf.fuel.core.ResponseDeserializable
 import com.google.gson.annotations.SerializedName
 
-//val baseUrl = "https://api.open-meteo.com/v1/forecast?latitude={latitude}&longitude={longitude}&daily=weathercode,temperature_2m_max,temperature_2m_min,rain_sum,snowfall_sum,precipitation_sum,precipitation_probability_max&timezone=auto&start_date={start_date}&end_date={end_date}"
-
 class WeatherForecastApiHandler(private val baseUrl: String, private var next: WeatherForecastHandler? = null) :
     BaseHandler() {
 
@@ -38,6 +36,7 @@ class WeatherForecastApiHandler(private val baseUrl: String, private var next: W
 
         return when (result) {
             is Result.Success -> {
+                context.shouldUpdateData = true
                 context.response = parseResult(result.get(), context.location)
             }
            else -> {
