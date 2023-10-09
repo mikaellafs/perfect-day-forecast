@@ -27,14 +27,3 @@ data class WeatherForecastRegister(
     val precipitationSum: Double,
     val precipitationProbabilityMax: Double
 )
-//{
-//    override fun toString(): String {
-//        return "Weather Code: $weatherCode\n" +
-//                "Max Temperature (°C): $maxTemperatureCelsius\n" +
-//                "Min Temperature (°C): $minTemperatureCelsius\n" +
-//                "Rainfall Sum (mm): $rainSumMillimeters\n" +
-//                "Snowfall Sum (cm): $snowfallSumCentimeters\n" +
-//                "Precipitation Hours (h): $precipitationHours\n" +
-//                "Precipitation Probability Max (%): $precipitationProbabilityMax"
-//    }
-//}

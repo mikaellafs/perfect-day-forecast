@@ -16,24 +16,24 @@ import com.google.gson.annotations.SerializedName
 
 class WeatherForecastApiHandler(private val baseUrl: String, private var next: WeatherForecastHandler? = null) :
     WeatherForecastHandler {
-    override fun next(location: Location, startDate: LocalDate, endDate: LocalDate): List<WeatherForecastRegister>? {
-        return next?.getData(location, startDate, endDate)
+    override fun next(context: WeatherRequestContext) {
+        next?.getData(context)
     }
 
     override fun setNext(handler: WeatherForecastHandler) {
         next = handler
     }
-    override fun getData(location: Location, startDate: LocalDate, endDate: LocalDate): List<WeatherForecastRegister>? {
+    override fun getData(context: WeatherRequestContext) {
         val dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd", Locale.ENGLISH)
 
         // Format dates as strings
-        val startDateStr = dateFormat.format(startDate)
-        val endDateStr = dateFormat.format(endDate)
+        val startDateStr = dateFormat.format(context.startDate)
+        val endDateStr = dateFormat.format(context.endDate)
 
         // Replace placeholders with params
         val apiUrl = baseUrl
-            .replace("{latitude}", location.latitude.toString())
-            .replace("{longitude}", location.longitude.toString())
+            .replace("{latitude}", context.location.latitude.toString())
+            .replace("{longitude}", context.location.longitude.toString())
             .replace("{start_date}", startDateStr)
             .replace("{end_date}", endDateStr)
 
@@ -44,16 +44,16 @@ class WeatherForecastApiHandler(private val baseUrl: String, private var next: W
 
         return when (result) {
             is Result.Success -> {
-                parseResult(result.get(), location)
+                context.response = parseResult(result.get(), context.location)
             }
            else -> {
                 print("Erro ao buscar dados da API")
-                next(location, startDate, endDate)
+                next(context)
             }
         }
     }
 
-    fun parseResult(result: WeatherApiResult, location: Location): List<WeatherForecastRegister> {
+    private fun parseResult(result: WeatherApiResult, location: Location): List<WeatherForecastRegister> {
         val weatherForecastList: MutableList<WeatherForecastRegister> = mutableListOf()
         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 

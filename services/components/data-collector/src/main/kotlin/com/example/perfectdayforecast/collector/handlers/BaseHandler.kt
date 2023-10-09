@@ -4,8 +4,8 @@ import com.example.perfectdayforecast.collector.models.Location
 import com.example.perfectdayforecast.collector.models.WeatherForecastRegister
 import java.time.LocalDate
 
-class BaseHandler: WeatherForecastHandler {
-    private var first: WeatherForecastHandler? = null
+class BaseHandler {
+    private var dataRetriever: WeatherForecastHandler? = null
 
     constructor(vararg handlers : WeatherForecastHandler) {
         var last: WeatherForecastHandler? = null
@@ -14,16 +14,13 @@ class BaseHandler: WeatherForecastHandler {
             last = h
         }
 
-        first = handlers[0]
+        dataRetriever = handlers[0]
     }
-    override fun getData(location: Location, startDate: LocalDate, endDate: LocalDate): List<WeatherForecastRegister>? {
-        return first?.next(location, startDate, endDate)
-    }
+    fun getData(location: Location, startDate: LocalDate, endDate: LocalDate): List<WeatherForecastRegister> {
+        val context = WeatherRequestContext(location, startDate, endDate)
+        dataRetriever?.next(context)
 
-    override fun next(location: Location, startDate: LocalDate, endDate: LocalDate): List<WeatherForecastRegister>? {
-        return null
+        return context.response
     }
-
-    override fun setNext(handler: WeatherForecastHandler) {}
 
 }
