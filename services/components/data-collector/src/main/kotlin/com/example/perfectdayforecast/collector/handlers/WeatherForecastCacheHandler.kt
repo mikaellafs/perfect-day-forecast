@@ -6,14 +6,7 @@ import com.example.perfectdayforecast.collector.models.WeatherForecastRegister
 import java.time.LocalDate
 
 class WeatherForecastCacheHandler(private val dataGateway: MemoryCacheGateway, private var next: WeatherForecastHandler? = null) :
-    WeatherForecastHandler {
-    override fun next(context: WeatherRequestContext) {
-        next?.getData(context)
-    }
-
-    override fun setNext(handler: WeatherForecastHandler) {
-        next = handler
-    }
+    BaseHandler() {
 
     override fun getData(context: WeatherRequestContext) {
         val result: MutableList<WeatherForecastRegister> = mutableListOf()
