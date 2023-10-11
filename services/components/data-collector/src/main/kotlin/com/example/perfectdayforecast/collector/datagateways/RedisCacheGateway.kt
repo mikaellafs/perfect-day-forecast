@@ -4,11 +4,10 @@ import com.example.perfectdayforecast.collector.models.Location
 import com.example.perfectdayforecast.collector.models.WeatherForecastRegister
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import java.util.concurrent.ConcurrentHashMap
+import io.lettuce.core.api.sync.RedisCommands
+import java.time.Duration
 
-class MemoryCacheGateway : WeatherDataGateway {
-    private val cache = ConcurrentHashMap<String, WeatherForecastRegister>()
-
+class RedisCacheGateway(private val commands: RedisCommands<String, String>): WeatherDataGateway {
     private fun generateKey(location: Location, date: LocalDate): String {
         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
         return "${location.latitude}_${location.longitude}_${date.format(formatter)}"
@@ -16,11 +15,11 @@ class MemoryCacheGateway : WeatherDataGateway {
 
     override fun save(data: WeatherForecastRegister) {
         val key = generateKey(data.location, data.date)
-        cache[key] = data
+        commands.setex(key, Duration.ofDays(1).toSeconds(), data.toJson())
     }
 
     override fun get(location: Location, date: LocalDate): WeatherForecastRegister? {
         val key = generateKey(location, date)
-        return cache[key]
+        return commands.get(key).let { WeatherForecastRegister.fromJson(it) }
     }
 }

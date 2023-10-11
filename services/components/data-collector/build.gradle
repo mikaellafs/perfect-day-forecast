@@ -9,6 +9,7 @@ plugins {
 dependencies {
     implementation 'com.github.kittinunf.fuel:fuel:2.3.1'
     implementation 'com.google.code.gson:gson:2.8.8'
+    implementation 'io.lettuce:lettuce-core:6.2.6.RELEASE'
 }
 
 

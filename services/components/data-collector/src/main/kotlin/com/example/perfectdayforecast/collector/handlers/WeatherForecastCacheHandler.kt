@@ -1,11 +1,12 @@
 package com.example.perfectdayforecast.collector.handlers
 
 import com.example.perfectdayforecast.collector.datagateways.MemoryCacheGateway
+import com.example.perfectdayforecast.collector.datagateways.WeatherDataGateway
 import com.example.perfectdayforecast.collector.models.Location
 import com.example.perfectdayforecast.collector.models.WeatherForecastRegister
 import java.time.LocalDate
 
-class WeatherForecastCacheHandler(private val dataGateway: MemoryCacheGateway, private var next: WeatherForecastHandler? = null) :
+class WeatherForecastCacheHandler(private val dataGateway: WeatherDataGateway, private var next: WeatherForecastHandler? = null) :
     BaseHandler() {
 
     override fun getData(context: WeatherRequestContext) {
