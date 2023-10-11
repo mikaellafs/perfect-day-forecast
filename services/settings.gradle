@@ -11,4 +11,9 @@ plugins {
 }
 
 rootProject.name = 'perfect-day-forecast'
-include('applications:data-analyzer', 'applications:data-collector', 'components:data-analyzer', 'components:data-collector')
+include('applications:data-analyzer',
+        'applications:data-collector',
+        'components:data-analyzer',
+        'components:data-collector',
+        'components:rabbit-support'
+)

@@ -7,3 +7,4 @@ applications/data-analyzer/build
 applications/data-collector/build
 components/data-analyzer/build
 components/data-collector/build
+components/rabbit-support/build
