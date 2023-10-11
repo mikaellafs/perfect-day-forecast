@@ -1,17 +1,115 @@
 
 package com.example.perfectdayforecast.app
 
+import com.example.perfectdayforecast.collector.datagateways.RedisCacheGateway
+import com.example.perfectdayforecast.collector.datagateways.WeatherDataGateway
 import com.example.perfectdayforecast.collector.handlers.WeatherForecastApiHandler
-import com.example.perfectdayforecast.collector.handlers.WeatherRequestContext
-import com.example.perfectdayforecast.collector.models.Location
-import java.time.LocalDate
+import com.example.perfectdayforecast.collector.handlers.WeatherForecastCacheHandler
+import com.example.perfectdayforecast.collector.handlers.WeatherQueryOrchestrator
+import com.example.perfectdayforecast.collector.models.WeatherForecastRegister
+import com.example.perfectdayforecast.rabbitsupport.*
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+import com.rabbitmq.client.ConnectionFactory
+import io.lettuce.core.RedisClient
 
-fun main() {
-    println("Hello from Data Collector")
-    val baseUrl = "https://api.open-meteo.com/v1/forecast?latitude={latitude}&longitude={longitude}&daily=weathercode,temperature_2m_max,temperature_2m_min,rain_sum,snowfall_sum,precipitation_sum,precipitation_probability_max&timezone=auto&start_date={start_date}&end_date={end_date}"
-    val handler = WeatherForecastApiHandler(baseUrl)
-    val context = WeatherRequestContext(Location.TOKYO, LocalDate.of(2023, 10, 8), LocalDate.of(2023, 10, 10))
-    handler.getData(context)
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import org.slf4j.LoggerFactory
+import java.net.URI
 
-    print(context.response.toString())
+class App
+
+private val logger = LoggerFactory.getLogger(App::class.java)
+
+fun main(): Unit = runBlocking {
+    val rabbitUrl = System.getenv("RABBIT_URL")?.let(::URI)
+        ?: throw RuntimeException("Please set the RABBIT_URL environment variable")
+    val apiUrl = System.getenv("WEATHER_FORECAST_API_URL")
+        ?: throw RuntimeException("Please set the WEATHER_FORECAST_API_URL environment variable")
+    val redisUrl = System.getenv("REDIS_URL")
+        ?: throw RuntimeException("Please set the REDIS_URL environment variable")
+
+    val weatherAnalyzerExchangeName =System.getenv("RABBIT_ANALYZER_EXCHANGE")
+        ?: throw RuntimeException("Please set the RABBIT_ANALYZER_EXCHANGE environment variable")
+    val weatherAnalyzerQueueName = System.getenv("RABBIT_ANALYZER_QUEUE")
+        ?: throw RuntimeException("Please set the RABBIT_ANALYZER_QUEUE environment variable")
+
+    val weatherRequestsExchangeName =System.getenv("RABBIT_REQUESTS_EXCHANGE")
+        ?: throw RuntimeException("Please set the RABBIT_REQUESTS_EXCHANGE environment variable")
+    val weatherRequestsQueueName = System.getenv("RABBIT_REQUESTS_QUEUE")
+        ?: throw RuntimeException("Please set the RABBIT_REQUESTS_QUEUE environment variable")
+
+    val redisClient = RedisClient.create(redisUrl)
+    val connection = redisClient.connect()
+    val syncCommands = connection.sync()
+
+    val connectionFactory = buildConnectionFactory(rabbitUrl)
+    val dataGateway: WeatherDataGateway = RedisCacheGateway(syncCommands)
+
+    val weatherAnalyzerExchange = RabbitExchange(
+        name = weatherAnalyzerExchangeName,
+        type = "direct",
+        routingKeyGenerator = { _: String -> "42" },
+        bindingKey = "42",
+    )
+    val weatherAnalyzerQueue = RabbitQueue(weatherAnalyzerQueueName)
+
+    val weatherRequestsExchange = RabbitExchange(
+        name = weatherRequestsExchangeName,
+        type = "direct",
+        routingKeyGenerator = { _: String -> "42" },
+        bindingKey = "42",
+    )
+    val weatherRequestsQueue = RabbitQueue(weatherRequestsQueueName)
+
+    connectionFactory.declareAndBind(weatherRequestsExchange, weatherRequestsQueue)
+    connectionFactory.declareAndBind(weatherAnalyzerExchange, weatherAnalyzerQueue)
+
+    listenForWeatherForecastRequests(
+        apiUrl,
+        dataGateway,
+        connectionFactory,
+        weatherAnalyzerExchange,
+        weatherRequestsQueue
+    )
+
+    // Close the connection and the Redis client when done
+    connection.close()
+    redisClient.shutdown()
+}
+
+fun CoroutineScope.listenForWeatherForecastRequests(
+    apiUrl: String,
+    dataGateway: WeatherDataGateway,
+    connectionFactory: ConnectionFactory,
+    weatherAnalyzerExchange: RabbitExchange,
+    weatherRequestQueue: RabbitQueue,
+) {
+    val publishWeatherForecast = publish(connectionFactory, weatherAnalyzerExchange)
+
+    val dataRetrieverOrchestrator = WeatherQueryOrchestrator(
+        dataGateway,
+        WeatherForecastCacheHandler(dataGateway),
+        WeatherForecastApiHandler(apiUrl)
+    )
+
+    launch {
+        logger.info("listening for perfect requests")
+        val channel = connectionFactory.newConnection().createChannel()
+
+        listen(queue = weatherRequestQueue, channel = channel) { message ->
+            val request = MessageWeatherRequest.fromJson(message)
+            logger.debug("received weather forecast request for days from {} to {}", request.startDate, request.endDate)
+            val forecasts = dataRetrieverOrchestrator.getData(request.location, request.startDate, request.endDate)
+
+            logger.debug("publishing weather forecast results for days from {} to {}", request.startDate, request.endDate)
+            publishWeatherForecast(forecastsToJson(forecasts))
+        }
+    }
+}
+
+fun forecastsToJson(forecasts: List<WeatherForecastRegister>): String {
+    return Gson().toJson(forecasts, object : TypeToken<List<WeatherForecastRegister>>(){}.type)
 }
