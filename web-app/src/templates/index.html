@@ -5,7 +5,12 @@
 </head>
 <body>
     <h1>Perfect day forecast</h1>
-    <form action="/echo_user_input" method="POST">
+    <form action="/send_request" method="POST">
+        <label for="username">What's your username?</label>
+        <input type="string" name="username">
+        <br>
+        <br>
+
         <label for="location">Location:</label>
         <select name="location">
             {% for loc in locations %}

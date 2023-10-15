@@ -1,3 +1,6 @@
 web-app/src/__pycache__/*
 .idea
 .docker-data
+
+web-app/src/models/__pycache__
+web-app/src/rabbit/__pycache__
