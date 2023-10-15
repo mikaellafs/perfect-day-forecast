@@ -23,5 +23,6 @@ class WeatherForecastCacheHandler(private val dataGateway: WeatherDataGateway, p
 
         context.shouldUpdateData = false
         context.response = result
+        println("cache: " + context.response)
     }
 }
