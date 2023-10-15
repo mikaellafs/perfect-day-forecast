@@ -19,3 +19,14 @@ services:
     command: redis-server --loglevel warning --appendonly yes
     volumes: 
       - ./.docker-data/cache:/data
+  postgre:
+    container_name: perfectdayforecast-postgre
+    image: postgres:15-bullseye
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: userpw
+      POSTGRES_DB: perfectdayforecast
+    volumes:
+      - ./.docker-data/db-data:/var/lib/postgresql/data/
