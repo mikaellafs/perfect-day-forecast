@@ -14,7 +14,8 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 
-class MessageWeatherRequest(
+data class MessageWeatherRequest(
+    @SerializedName("request_id") val requestId: Int,
     val location: Location,
     @SerializedName("start_date") val startDate: LocalDate,
     @SerializedName("end_date") val endDate: LocalDate
@@ -24,6 +25,7 @@ class MessageWeatherRequest(
         fun fromJson(json: String): MessageWeatherRequest {
             val gson = GsonBuilder()
                 .registerTypeAdapter(LocalDate::class.java, LocalDateDeserializer())
+                .registerTypeAdapter(Location::class.java, Location.LocationDeserializer())
                 .create()
 
             return gson.fromJson(json, MessageWeatherRequest::class.java)

@@ -1,5 +1,10 @@
 package com.example.perfectdayforecast.collector.models
 
+import com.google.gson.JsonDeserializationContext
+import com.google.gson.JsonDeserializer
+import com.google.gson.JsonElement
+import java.lang.reflect.Type
+
 enum class Location(val city: String, val latitude: Double, val longitude: Double) {
     NEW_YORK("New York", 40.7128, -74.0060),
     LOS_ANGELES("Los Angeles", 34.0522, -118.2437),
@@ -11,5 +16,24 @@ enum class Location(val city: String, val latitude: Double, val longitude: Doubl
 
     override fun toString(): String {
         return city
+    }
+
+    class LocationDeserializer : JsonDeserializer<Location> {
+        override fun deserialize(
+            json: JsonElement,
+            typeOfT: Type?,
+            context: JsonDeserializationContext?
+        ): Location {
+            return when (json.asString) {
+                "New York" -> Location.NEW_YORK
+                "Los Angeles" -> Location.LOS_ANGELES
+                "London" -> Location.LONDON
+                "Paris" -> Location.PARIS
+                "Tokyo" -> Location.TOKYO
+                "Sydney" -> Location.SYDNEY
+                "Rio de Janeiro" -> Location.RIO_DE_JANEIRO
+                else -> throw IllegalArgumentException("Unknown location: ${json.asString}")
+            }
+        }
     }
 }
