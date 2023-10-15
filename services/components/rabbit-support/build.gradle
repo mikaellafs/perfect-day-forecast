@@ -1,0 +1,7 @@
+plugins {
+}
+
+dependencies {
+    implementation 'com.rabbitmq:amqp-client:5.19.0'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2'
+}

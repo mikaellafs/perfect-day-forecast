@@ -1,0 +1,43 @@
+buildscript {
+    ext.kotlin_version = '1.6.21'
+//    ext.ktor_version = '1.6.8'
+    ext.mockk_version = '1.10.6'
+
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+plugins {
+    id "org.jetbrains.kotlin.jvm" version "1.6.21" apply false
+}
+
+subprojects {
+    if (name == "applications" || name == "components") return
+
+    apply plugin: 'kotlin'
+
+    defaultTasks "clean", "build"
+
+    repositories {
+        mavenCentral()
+    }
+
+    test {
+        useJUnitPlatform()
+    }
+
+    dependencies {
+        testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+        testImplementation 'org.testcontainers:testcontainers:1.19.0'
+        testImplementation 'org.testcontainers:junit-jupiter:1.19.0'
+        testImplementation "io.kotest:kotest-framework-api-jvm:5.3.0"
+        testImplementation "io.mockk:mockk:1.12.4"
+
+        testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+
+    }
+}

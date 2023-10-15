@@ -1,0 +1,32 @@
+version: '3'
+
+services:
+  rabbitmq:
+    image: rabbitmq:3.8.25-management
+    container_name: perfectdayforecast-rabbit
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+    volumes:
+      - ./.docker-data/.rabbit-data:/var/lib/rabbitmq/
+      - ./.docker-data/.rabbit-log:/var/log/rabbitmq
+      - ./.rabbit-plugins:/etc/rabbitmq/enabled_plugins
+  redis:
+    image: redis:6.2-alpine
+    container_name: perfectdayforecast-redis
+    ports:
+      - '6379:6379'
+    command: redis-server --loglevel warning --appendonly yes
+    volumes: 
+      - ./.docker-data/cache:/data
+  postgre:
+    container_name: perfectdayforecast-postgre
+    image: postgres:15-bullseye
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: userpw
+      POSTGRES_DB: perfectdayforecast
+    volumes:
+      - ./.docker-data/db-data:/var/lib/postgresql/data/

@@ -1,0 +1,13 @@
+user sends request -> save request to db -> put to queue -> collector get data -> put to queue -> analyzer analyzes data -> save to db
+
+ENDPOINTS:
+make request
+get requests
+get result for request
+redo request
+
+
+TODO:
+- Write tests
+- Implement in web-service to publish the request to the queue
+- Implement in the web-service to save the request to the database associated to a user
