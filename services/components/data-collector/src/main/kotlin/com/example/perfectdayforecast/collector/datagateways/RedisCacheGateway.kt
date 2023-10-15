@@ -20,6 +20,6 @@ class RedisCacheGateway(private val commands: RedisCommands<String, String>): We
 
     override fun get(location: Location, date: LocalDate): WeatherForecastRegister? {
         val key = generateKey(location, date)
-        return commands.get(key).let { WeatherForecastRegister.fromJson(it) }
+        return commands.get(key)?.let { WeatherForecastRegister.fromJson(it) }
     }
 }

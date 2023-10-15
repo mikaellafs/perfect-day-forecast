@@ -1,9 +1,9 @@
 package com.example.perfectdayforecast.collector.handlers
 
+import com.example.perfectdayforecast.collector.models.ApiUrl
 import com.example.perfectdayforecast.collector.models.Location
 import com.example.perfectdayforecast.collector.models.Units
 import com.example.perfectdayforecast.collector.models.WeatherForecastRegister
-import com.github.kittinunf.fuel.httpGet
 import com.github.kittinunf.result.Result
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -12,7 +12,7 @@ import com.google.gson.Gson
 import com.github.kittinunf.fuel.core.ResponseDeserializable
 import com.google.gson.annotations.SerializedName
 
-class WeatherForecastApiHandler(private val baseUrl: String, private var next: WeatherForecastHandler? = null) :
+class WeatherForecastApiHandler(private val baseUrl: ApiUrl, private var next: WeatherForecastHandler? = null) :
     BaseHandler() {
 
     override fun getData(context: WeatherRequestContext) {
@@ -31,13 +31,15 @@ class WeatherForecastApiHandler(private val baseUrl: String, private var next: W
 
         val (_, _, result) = apiUrl
             .httpGet()
-            .responseObject(WeatherApiResultDeserializer())
+            .responseString()
 
+        val objResult = WeatherApiResultDeserializer().deserialize(result.get())
 
         return when (result) {
             is Result.Success -> {
                 context.shouldUpdateData = true
-                context.response = parseResult(result.get(), context.location)
+                context.response = parseResult(objResult, context.location)
+                print("api: " + result)
             }
            else -> {
                 print("Erro ao buscar dados da API")

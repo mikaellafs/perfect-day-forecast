@@ -7,6 +7,7 @@ dependencies {
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2'
     implementation 'com.google.code.gson:gson:2.8.8'
     implementation 'io.lettuce:lettuce-core:6.2.6.RELEASE'
+    implementation "ch.qos.logback:logback-classic:1.2.3"
 }
 
 application {

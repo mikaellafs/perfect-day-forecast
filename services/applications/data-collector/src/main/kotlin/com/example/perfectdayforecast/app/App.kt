@@ -6,6 +6,7 @@ import com.example.perfectdayforecast.collector.datagateways.WeatherDataGateway
 import com.example.perfectdayforecast.collector.handlers.WeatherForecastApiHandler
 import com.example.perfectdayforecast.collector.handlers.WeatherForecastCacheHandler
 import com.example.perfectdayforecast.collector.handlers.WeatherQueryOrchestrator
+import com.example.perfectdayforecast.collector.models.ApiUrl
 import com.example.perfectdayforecast.collector.models.WeatherForecastRegister
 import com.example.perfectdayforecast.rabbitsupport.*
 import com.google.gson.Gson
@@ -74,10 +75,6 @@ fun main(): Unit = runBlocking {
         weatherAnalyzerExchange,
         weatherRequestsQueue
     )
-
-    // Close the connection and the Redis client when done
-    connection.close()
-    redisClient.shutdown()
 }
 
 fun CoroutineScope.listenForWeatherForecastRequests(
@@ -92,7 +89,7 @@ fun CoroutineScope.listenForWeatherForecastRequests(
     val dataRetrieverOrchestrator = WeatherQueryOrchestrator(
         dataGateway,
         WeatherForecastCacheHandler(dataGateway),
-        WeatherForecastApiHandler(apiUrl)
+        WeatherForecastApiHandler(ApiUrl(apiUrl))
     )
 
     launch {
