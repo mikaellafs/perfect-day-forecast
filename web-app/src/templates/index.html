@@ -5,7 +5,7 @@
 </head>
 <body>
     <h1>Perfect day forecast</h1>
-    <form action="/send_request" method="POST">
+    <form action="/requests" method="POST">
         <label for="username">What's your username?</label>
         <input type="string" name="username">
         <br>
@@ -44,5 +44,23 @@
         <br>
         <input type="submit" value="Submit">
     </form>
+    <p>
+        <h2>Check past requests</h2>
+        <form id="view-requests-form">
+            <label for="username">Username:</label>
+            <input type="text" id="username" required>
+            <button type="button" id="view-requests-button">Show</button>
+        </form>
+        <script>
+            document.getElementById('view-requests-button').addEventListener('click', function() {
+                const username = document.getElementById('username').value;
+                if (username) {
+                    const url = `/requests/${username}`;
+                    window.location.href = url;
+                }
+            });
+        </script>
+    </p>
+    
 </body>
 </html>

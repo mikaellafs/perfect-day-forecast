@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Requests for {{ username }}</title>
+</head>
+<body>
+    <h1>Requests for {{ username }}</h1>
+    <ul>
+        {% for request in requests %}
+        <li>
+            <strong>Location:</strong> {{ request.location }}<br>
+            <strong>Start Date:</strong> {{ request.start_date }}<br>
+            <strong>End Date:</strong> {{ request.end_date }}<br>
+            <strong>Status:</strong> {{ request.status }}<br>
+            <strong>Best Day Result:</strong> {{ request.best_day_result }}<br>
+            <button class="redo-button" data-request="{{ request.id }}">Redo</button>
+        </li>
+        <hr>
+    {% endfor %}
+    </ul>
+
+    <script>
+        // Add a click event listener to all "redo" buttons
+        const redoButtons = document.querySelectorAll(".redo-button");
+        redoButtons.forEach(button => {
+            button.addEventListener("click", () => {
+                // Get the request details from the button's data attribute
+                const requestDetails = button.getAttribute("data-request");
+                
+                console.log(`Redo request: ${requestDetails}`);
+            });
+        });
+    </script>
+</body>
+</html>

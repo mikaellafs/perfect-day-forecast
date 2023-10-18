@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from flask import Flask, request,render_template, jsonify
-from models.request import Request, save_request_to_db
+from models.request import Request, save_request_to_db, get_requests_from_user
 from rabbit.push import push_to_rabbitmq
 
 app = Flask(__name__)
@@ -23,8 +23,8 @@ weather_conditions = {
 def main():
     return render_template("index.html", locations=locations, weather_conditions=weather_conditions)
 
-@app.route("/send_request", methods=["POST"])
-def echo_input():
+@app.route("/requests", methods=["POST"])
+def send_request():
     user = request.form.get("username")
     location = request.form.get("location")
     start_date = request.form.get("start_date")
@@ -39,5 +39,10 @@ def echo_input():
         return jsonify(error=e.args[0]), 500
 
     return f"What is the most likely day to be {weather_condition} between {start_date} and {end_date} in {location}? Wait..."
+
+@app.route("/requests/<username>", methods=["GET"])
+def get_requests(username):
+    requests = get_requests_from_user(username)
+    return render_template("requests.html", username=username, requests=requests)
 
 app.run()

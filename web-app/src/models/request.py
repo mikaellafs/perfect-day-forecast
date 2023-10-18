@@ -71,3 +71,15 @@ def save_request_to_db(request: Request):
         raise Exception("An error occurred while saving the request")
     finally:
         session.close()
+
+def get_requests_from_user(user: String):
+    session = Session(expire_on_commit=False)
+    
+    try:
+        requests = session.query(Request).filter(Request.user == user).all()
+        return requests
+    except SQLAlchemyError as e:
+        print(f"An error occurred: {e}")
+        raise Exception("An error occurred while querying requests")
+    finally:
+        session.close()
