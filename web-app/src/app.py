@@ -31,10 +31,10 @@ def send_request():
     end_date = request.form.get("end_date")
     weather_condition = request.form.get("weather_condition")
 
-    req = Request(user=user, location=location, start_date=start_date, end_date=end_date)
+    req = Request(user=user, location=location, start_date=start_date, end_date=end_date, weather_preference = weather_condition)
     try:
         save_request_to_db(req)
-        push_to_rabbitmq(req.id, location=location, start_date=start_date, end_date=end_date)
+        push_to_rabbitmq(req.id, location=location, start_date=start_date, end_date=end_date, weather_preference=weather_condition)
     except Exception as e:
         return jsonify(error=e.args[0]), 500
 

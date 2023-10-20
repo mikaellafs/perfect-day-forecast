@@ -7,6 +7,7 @@ import com.example.perfectdayforecast.collector.handlers.WeatherForecastApiHandl
 import com.example.perfectdayforecast.collector.handlers.WeatherForecastCacheHandler
 import com.example.perfectdayforecast.collector.handlers.WeatherQueryOrchestrator
 import com.example.perfectdayforecast.collector.models.ApiUrl
+import com.example.perfectdayforecast.collector.models.Location
 import com.example.perfectdayforecast.collector.models.WeatherForecastRegister
 import com.example.perfectdayforecast.rabbitsupport.*
 import com.google.gson.Gson
@@ -102,11 +103,31 @@ fun CoroutineScope.listenForWeatherForecastRequests(
             val forecasts = dataRetrieverOrchestrator.getData(request.location, request.startDate, request.endDate)
 
             logger.debug("publishing weather forecast results for days from {} to {}", request.startDate, request.endDate)
-            publishWeatherForecast(forecastsToJson(forecasts))
+            if (forecasts.isNotEmpty()) {
+                publishWeatherForecast(generateResultMessage(request.requestId, request.location, request.weatherPreference, forecasts))
+            }
         }
     }
 }
 
-fun forecastsToJson(forecasts: List<WeatherForecastRegister>): String {
-    return Gson().toJson(forecasts, object : TypeToken<List<WeatherForecastRegister>>(){}.type)
+fun generateResultMessage(id: Int, location: Location, preference: String, forecasts: List<WeatherForecastRegister>): String {
+    val requestResults = forecasts.map { w ->
+        WeatherRequestResult(
+            w.date,
+            w.weathercode,
+            w.maxTemperature,
+            w.minTemperature,
+            w.rainSum,
+            w.snowfallSum,
+            w.precipitationSum,
+            w.precipitationProbabilityMax
+        )
+    }
+
+    val resultMessage = WeatherRequestResultMessage(
+        id, preference, forecasts[0]?.units, location, requestResults
+    )
+    val r = resultMessage.toJson()
+    println("request result: $r")
+    return r
 }

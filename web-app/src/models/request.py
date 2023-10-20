@@ -12,6 +12,13 @@ class RequestStatus(Enum):
     IN_PROGRESS = "in progress"
     DONE = "done"
 
+class Preference(Enum):
+    SUNNY = "sunny"
+    RAINY = "rainy"
+    CLOUDY = "cloudy"
+    WINDY = "windy"
+    SNOWY = "snowy"
+
 requests_table_name = "requests"
 
 Base = declarative_base()
@@ -29,6 +36,7 @@ if not inspect(engine).has_table(requests_table_name):
         Column('start_date', DateTime),
         Column('end_date', DateTime),
         Column('status', String),
+        Column('weather_preference', String),
         Column('best_day_result', DateTime)
     )
 
@@ -42,6 +50,7 @@ class Request(Base):
     start_date = Column(DateTime)
     end_date = Column(DateTime)
     status = Column(String)
+    weather_preference = Column(String)
     best_day_result = Column(DateTime)
 
 def save_request_to_db(request: Request):
@@ -52,7 +61,8 @@ def save_request_to_db(request: Request):
         Request.user == request.user,
         Request.status == RequestStatus.IN_PROGRESS.value,
         Request.start_date == request.start_date,
-        Request.end_date == request.end_date
+        Request.end_date == request.end_date,
+        Request.weather_preference == request.weather_preference
     ).all()
 
     if overlapping_requests:
