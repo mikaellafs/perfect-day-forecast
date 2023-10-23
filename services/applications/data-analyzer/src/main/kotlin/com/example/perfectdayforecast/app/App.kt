@@ -49,8 +49,7 @@ fun CoroutineScope.listenForWeatherAnalysisRequests(
         val channel = connectionFactory.newConnection().createChannel()
 
         listen(queue = weatherAnalysisQueue, channel = channel) { message ->
-            println("Message: $message")
-//            val request = PerfectDayRequest.fromJson(message)
+            val request = PerfectDayRequest.fromJson(message)
 //            logger.debug("received weather forecast request for days from {} to {}", request.startDate, request.endDate)
 
 //            weatherAnalyzer.analyzeRequest(request)

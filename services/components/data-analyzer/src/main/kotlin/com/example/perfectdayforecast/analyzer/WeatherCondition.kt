@@ -13,19 +13,21 @@ enum class WeatherCondition {
     SNOWY,
     UNKNOWN;
 
-    fun fromWeatherCode(code: Int): WeatherCondition {
-        return when (code) {
-            0 -> WeatherCondition.CLEAR_SKY
-            in 1..3 -> WeatherCondition.CLOUDY
-            in 45..48 -> WeatherCondition.FOGGY
-            in 51..55, in 56..57 -> WeatherCondition.RAINY // Combine rainy and freezing drizzle
-            in 61..67 -> WeatherCondition.RAINY
-            in 71..75, 77 -> WeatherCondition.SNOWY // Combine snowy and snow grains
-            in 80..82 -> WeatherCondition.RAINY
-            in 85..86 -> WeatherCondition.SNOWY
-            95, 96 -> WeatherCondition.RAINY // Combine rainy and thunderstorm
-            99 -> WeatherCondition.SNOWY // Consider as snowy due to thunderstorm with heavy hail
-            else -> WeatherCondition.UNKNOWN
+    companion object {
+        fun fromWeatherCode(code: Int): WeatherCondition {
+            return when (code) {
+                0 -> WeatherCondition.CLEAR_SKY
+                in 1..3 -> WeatherCondition.CLOUDY
+                in 45..48 -> WeatherCondition.FOGGY
+                in 51..55, in 56..57 -> WeatherCondition.RAINY // Combine rainy and freezing drizzle
+                in 61..67 -> WeatherCondition.RAINY
+                in 71..75, 77 -> WeatherCondition.SNOWY // Combine snowy and snow grains
+                in 80..82 -> WeatherCondition.RAINY
+                in 85..86 -> WeatherCondition.SNOWY
+                95, 96 -> WeatherCondition.RAINY // Combine rainy and thunderstorm
+                99 -> WeatherCondition.SNOWY // Consider as snowy due to thunderstorm with heavy hail
+                else -> WeatherCondition.UNKNOWN
+            }
         }
     }
 
@@ -41,7 +43,7 @@ enum class WeatherCondition {
                 "foggy" -> WeatherCondition.FOGGY
                 "rainy" -> WeatherCondition.RAINY
                 "snowy" -> WeatherCondition.SNOWY
-                else -> throw IllegalArgumentException("Unknown WeatherCondition: ${json.asString}")
+                else -> WeatherCondition.fromWeatherCode(json.asInt)
             }
         }
     }

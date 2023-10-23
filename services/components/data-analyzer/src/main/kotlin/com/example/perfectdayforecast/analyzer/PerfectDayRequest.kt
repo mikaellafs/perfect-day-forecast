@@ -10,7 +10,7 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 data class PerfectDayRequest(
-    val requestId: Int,
+    @SerializedName("request_id") val requestId: Int,
     val days: List<WeatherForecast>,
     @SerializedName("weather_preference") val weatherPreference: WeatherCondition
 ) {
