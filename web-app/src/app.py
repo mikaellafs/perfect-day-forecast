@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from flask import Flask, request,render_template, jsonify
-from models.request import Request, save_request_to_db, get_requests_from_user
+from models.request import Request, save_request_to_db, get_requests_from_user, Preference
 from rabbit.push import push_to_rabbitmq
 
 app = Flask(__name__)
@@ -13,10 +13,11 @@ locations = ["New York", "Los Angeles", "London", "Paris", "Tokyo", "Sydney", "R
 
 # List of weather conditions
 weather_conditions = {
-    "sunny": "Sunny",
-    "rainy": "Rainy",
-    "cloudy": "Cloudy",
-    "windy": "Windy"
+    Preference.CLEAR_SKY.value: "Clear sky",
+    Preference.CLOUDY.value: "Cloudy",
+    Preference.FOGGY.value: "Foggy",
+    Preference.RAINY.value: "Rainy",
+    Preference.SNOWY.value:"Snowy",
 }
 
 @app.route("/")

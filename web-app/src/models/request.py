@@ -13,10 +13,10 @@ class RequestStatus(Enum):
     DONE = "done"
 
 class Preference(Enum):
-    SUNNY = "sunny"
-    RAINY = "rainy"
+    CLEAR_SKY = "clear sky"
     CLOUDY = "cloudy"
-    WINDY = "windy"
+    FOGGY = "foggy"
+    RAINY = "rainy"
     SNOWY = "snowy"
 
 requests_table_name = "requests"
@@ -62,7 +62,8 @@ def save_request_to_db(request: Request):
         Request.status == RequestStatus.IN_PROGRESS.value,
         Request.start_date == request.start_date,
         Request.end_date == request.end_date,
-        Request.weather_preference == request.weather_preference
+        Request.weather_preference == request.weather_preference,
+        Request.location == request.location
     ).all()
 
     if overlapping_requests:
