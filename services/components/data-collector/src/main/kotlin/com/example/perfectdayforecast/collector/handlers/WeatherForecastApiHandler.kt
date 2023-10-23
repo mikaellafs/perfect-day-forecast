@@ -39,7 +39,6 @@ class WeatherForecastApiHandler(private val baseUrl: ApiUrl, private var next: W
             is Result.Success -> {
                 context.shouldUpdateData = true
                 context.response = parseResult(objResult, context.location)
-                print("api: " + result)
             }
            else -> {
                 print("Erro ao buscar dados da API")
