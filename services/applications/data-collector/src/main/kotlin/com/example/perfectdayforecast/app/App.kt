@@ -7,10 +7,9 @@ import com.example.perfectdayforecast.collector.handlers.WeatherForecastApiHandl
 import com.example.perfectdayforecast.collector.handlers.WeatherForecastCacheHandler
 import com.example.perfectdayforecast.collector.handlers.WeatherQueryOrchestrator
 import com.example.perfectdayforecast.collector.models.ApiUrl
+import com.example.perfectdayforecast.collector.models.Location
 import com.example.perfectdayforecast.collector.models.WeatherForecastRegister
 import com.example.perfectdayforecast.rabbitsupport.*
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import com.rabbitmq.client.ConnectionFactory
 import io.lettuce.core.RedisClient
 
@@ -52,8 +51,8 @@ fun main(): Unit = runBlocking {
     val weatherAnalyzerExchange = RabbitExchange(
         name = weatherAnalyzerExchangeName,
         type = "direct",
-        routingKeyGenerator = { _: String -> "42" },
-        bindingKey = "42",
+        routingKeyGenerator = { _: String -> "43" },
+        bindingKey = "43",
     )
     val weatherAnalyzerQueue = RabbitQueue(weatherAnalyzerQueueName)
 
@@ -98,15 +97,34 @@ fun CoroutineScope.listenForWeatherForecastRequests(
 
         listen(queue = weatherRequestQueue, channel = channel) { message ->
             val request = MessageWeatherRequest.fromJson(message)
-            logger.debug("received weather forecast request for days from {} to {}", request.startDate, request.endDate)
+            println("received weather forecast request for days from ${request.startDate} to ${request.endDate}")
             val forecasts = dataRetrieverOrchestrator.getData(request.location, request.startDate, request.endDate)
 
-            logger.debug("publishing weather forecast results for days from {} to {}", request.startDate, request.endDate)
-            publishWeatherForecast(forecastsToJson(forecasts))
+            if (forecasts.isNotEmpty()) {
+                println("publishing weather forecast results for days from ${request.startDate} to ${request.endDate}")
+                publishWeatherForecast(generateResultMessage(request.requestId, request.location, request.weatherPreference, forecasts))
+            }
         }
     }
 }
 
-fun forecastsToJson(forecasts: List<WeatherForecastRegister>): String {
-    return Gson().toJson(forecasts, object : TypeToken<List<WeatherForecastRegister>>(){}.type)
+fun generateResultMessage(id: Int, location: Location, preference: String, forecasts: List<WeatherForecastRegister>): String {
+    val requestResults = forecasts.map { w ->
+        WeatherRequestResult(
+            w.date,
+            w.weathercode,
+            w.maxTemperature,
+            w.minTemperature,
+            w.rainSum,
+            w.snowfallSum,
+            w.precipitationSum,
+            w.precipitationProbabilityMax
+        )
+    }
+
+    val resultMessage = WeatherRequestResultMessage(
+        id, preference, forecasts[0]?.units, location, requestResults
+    )
+    val r = resultMessage.toJson()
+    return r
 }

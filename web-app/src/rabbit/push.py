@@ -2,7 +2,7 @@ import pika
 import os
 import json
 
-def push_to_rabbitmq(user, location, start_date, end_date):
+def push_to_rabbitmq(user, location, start_date, end_date, weather_preference):
     connection = pika.BlockingConnection(pika.ConnectionParameters(
         host= os.getenv("RABBIT_HOST"),
         port= os.getenv("RABBIT_PORT"),  
@@ -14,12 +14,14 @@ def push_to_rabbitmq(user, location, start_date, end_date):
         "request_id": user,
         "location": location,
         "start_date": start_date,
-        "end_date": end_date
+        "end_date": end_date,
+        "weather_preference": weather_preference
     }))
     print(json.dumps({
         "request_id": user,
         "location": location,
         "start_date": start_date,
-        "end_date": end_date
+        "end_date": end_date,
+        "weather_preference": weather_preference
     }))
     connection.close()

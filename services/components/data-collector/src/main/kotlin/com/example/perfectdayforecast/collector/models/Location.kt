@@ -1,9 +1,9 @@
 package com.example.perfectdayforecast.collector.models
 
-import com.google.gson.JsonDeserializationContext
-import com.google.gson.JsonDeserializer
-import com.google.gson.JsonElement
+import com.google.gson.*
 import java.lang.reflect.Type
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 enum class Location(val city: String, val latitude: Double, val longitude: Double) {
     NEW_YORK("New York", 40.7128, -74.0060),
@@ -34,6 +34,16 @@ enum class Location(val city: String, val latitude: Double, val longitude: Doubl
                 "Rio de Janeiro" -> Location.RIO_DE_JANEIRO
                 else -> throw IllegalArgumentException("Unknown location: ${json.asString}")
             }
+        }
+    }
+
+    class LocationSerializer : JsonSerializer<Location> {
+        override fun serialize(
+            location: Location,
+            typeOfSrc: Type?,
+            context: JsonSerializationContext?
+        ): JsonElement {
+            return JsonPrimitive(location.name)
         }
     }
 }
