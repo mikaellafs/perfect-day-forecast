@@ -13,10 +13,30 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
 
+import io.ktor.metrics.micrometer.*
+import io.micrometer.prometheus.PrometheusConfig
+import io.micrometer.prometheus.PrometheusMeterRegistry
+import io.ktor.application.*
+import io.ktor.response.*
+import io.ktor.routing.*
+import io.ktor.server.engine.embeddedServer
+import io.ktor.server.netty.Netty
+
 class App
 
 private val logger = LoggerFactory.getLogger(App::class.java)
+private val prometheusRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
+fun Application.module() {
+    install(MicrometerMetrics) {
+        registry = prometheusRegistry
+    }
 
+    routing {
+        get("/metrics") {
+            call.respond(prometheusRegistry.scrape())
+        }
+    }
+}
 fun main(): Unit = runBlocking {
     val rabbitUrl = System.getenv("RABBIT_URL")?.let(::URI)
         ?: throw RuntimeException("Please set the RABBIT_URL environment variable")
@@ -44,14 +64,19 @@ fun main(): Unit = runBlocking {
     listenForWeatherAnalysisRequests(
         dataGateway,
         connectionFactory,
-        weatherAnalyzerQueue
+        weatherAnalyzerQueue,
+        prometheusRegistry
     )
+
+    val port = System.getenv("PROMETHEUS_METRICS_PORT")?.toIntOrNull() ?: 8080
+    embeddedServer(Netty, port = port, module = Application::module).start(wait = false)
 }
 
 fun CoroutineScope.listenForWeatherAnalysisRequests(
     dataGateway: DataGateway,
     connectionFactory: ConnectionFactory,
     weatherAnalysisQueue: RabbitQueue,
+    prometheusMeterRegistry: PrometheusMeterRegistry
 ) {
     val weatherAnalyzer = WeatherAnalyzer(dataGateway)
     launch {
@@ -61,11 +86,15 @@ fun CoroutineScope.listenForWeatherAnalysisRequests(
         listen(queue = weatherAnalysisQueue, channel = channel) { message ->
             try {
                 val request = PerfectDayRequest.fromJson(message)
+                prometheusMeterRegistry.counter("analysis_requests").increment()
+
                 logger.info("received weather analysis request id ${request.requestId} for a ${request.weatherPreference.name} weather condition")
 
                 weatherAnalyzer.analyzeRequest(request)
+                prometheusMeterRegistry.counter("success_analysis_requests").increment()
             } catch (e: Exception) {
                 logger.error("Error occurred when processing message \"$message\"", e)
+                prometheusMeterRegistry.counter("fail_analysis_requests").increment()
             }
         }
     }
