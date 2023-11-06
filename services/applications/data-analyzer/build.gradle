@@ -4,6 +4,8 @@
 
 apply plugin: 'application'
 
+mainClassName = 'com.example.perfectdayforecast.app.AppKt'
+
 dependencies {
     implementation project(":components:data-analyzer")
     implementation project(":components:rabbit-support")
@@ -48,11 +50,23 @@ project.ext {
     DATABASE_URL = "jdbc:postgresql://localhost:5432/perfectdayforecast?user=user&password=userpw"
 }
 
-tasks.withType(JavaExec) {
-    doFirst {
-        environment RABBIT_URL: project.RABBIT_URL
-        environment RABBIT_ANALYZER_EXCHANGE: project.RABBIT_ANALYZER_EXCHANGE
-        environment RABBIT_ANALYZER_QUEUE: project.RABBIT_ANALYZER_QUEUE
-        environment DATABASE_URL: project.DATABASE_URL
+//tasks.withType(JavaExec) {
+//    doFirst {
+//        environment RABBIT_URL: project.RABBIT_URL
+//        environment RABBIT_ANALYZER_EXCHANGE: project.RABBIT_ANALYZER_EXCHANGE
+//        environment RABBIT_ANALYZER_QUEUE: project.RABBIT_ANALYZER_QUEUE
+//        environment DATABASE_URL: project.DATABASE_URL
+//    }
+//}
+
+jar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    manifest {
+        attributes(
+                'Main-Class': 'com.example.perfectdayforecast.app.AppKt'
+        )
+    }
+    from {
+        configurations.compileClasspath.collect { it.isDirectory() ? it : zipTree(it) }
     }
 }

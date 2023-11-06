@@ -1,0 +1,38 @@
+version: '3.4'
+
+services:
+  prometheus:
+    image: prom/prometheus
+    user: root
+    container_name: perfectdayforecast-prometheus
+    hostname: prometheus
+    volumes:
+      - ./prometheus:/etc/prometheus
+      - ./.docker-data/prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    ports:
+      - 9090:9090
+    networks:
+      perfectdayforecast-net:
+        aliases:
+          - prometheus  
+      
+  grafana:
+    image: grafana/grafana
+    container_name: perfectdayforecast-grafana
+    hostname: grafana
+    volumes:
+      - ./.docker-data/grafana-data:/var/lib/grafana
+    environment:
+      -  GF_SECURITY_ADMIN_PASSWORD=admin
+      -  GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource
+    ports:
+      - 3000:3000
+    networks:
+      - perfectdayforecast-net
+      
+networks:
+  perfectdayforecast-net:
+    driver: bridge

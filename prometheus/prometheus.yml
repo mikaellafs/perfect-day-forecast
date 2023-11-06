@@ -1,0 +1,18 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: 'perfect_day_forecast_analyzer'
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['dataanalyzer:8080']
+      
+  - job_name: 'perfect_day_forecast_collector'
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['datacollector:8082']

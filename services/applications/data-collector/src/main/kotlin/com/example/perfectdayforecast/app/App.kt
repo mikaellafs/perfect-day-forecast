@@ -160,7 +160,7 @@ fun generateResultMessage(id: Int, location: Location, preference: String, forec
     }
 
     val resultMessage = WeatherRequestResultMessage(
-        id, preference, forecasts[0]?.units, location, requestResults
+        id, preference, forecasts[0].units, location, requestResults
     )
     val r = resultMessage.toJson()
     return r
