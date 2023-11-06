@@ -9,9 +9,5 @@ class WeatherAnalyzerTest {
     fun testGetBestDay() {
 
     }
-    @Test
-    fun testGetBestDays() {
-
-    }
 
 }

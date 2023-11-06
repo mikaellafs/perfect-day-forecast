@@ -19,9 +19,31 @@ import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
 import java.net.URI
 
+import io.ktor.metrics.micrometer.*
+import io.micrometer.prometheus.PrometheusConfig
+import io.micrometer.prometheus.PrometheusMeterRegistry
+import io.ktor.application.*
+import io.ktor.response.*
+import io.ktor.routing.*
+import io.ktor.server.engine.embeddedServer
+import io.ktor.server.netty.Netty
+
 class App
 
 private val logger = LoggerFactory.getLogger(App::class.java)
+private val prometheusRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
+
+fun Application.module() {
+    install(MicrometerMetrics) {
+        registry = prometheusRegistry
+    }
+
+    routing {
+        get("/metrics") {
+            call.respond(prometheusRegistry.scrape())
+        }
+    }
+}
 
 fun main(): Unit = runBlocking {
     val rabbitUrl = System.getenv("RABBIT_URL")?.let(::URI)
@@ -72,8 +94,12 @@ fun main(): Unit = runBlocking {
         dataGateway,
         connectionFactory,
         weatherAnalyzerExchange,
-        weatherRequestsQueue
+        weatherRequestsQueue,
+        prometheusRegistry
     )
+
+    val port = System.getenv("PROMETHEUS_METRICS_PORT")?.toIntOrNull() ?: 8082
+    embeddedServer(Netty, port = port, module = Application::module).start(wait = false)
 }
 
 fun CoroutineScope.listenForWeatherForecastRequests(
@@ -82,6 +108,7 @@ fun CoroutineScope.listenForWeatherForecastRequests(
     connectionFactory: ConnectionFactory,
     weatherAnalyzerExchange: RabbitExchange,
     weatherRequestQueue: RabbitQueue,
+    prometheusMeterRegistry: PrometheusMeterRegistry
 ) {
     val publishWeatherForecast = publish(connectionFactory, weatherAnalyzerExchange)
 
@@ -96,14 +123,24 @@ fun CoroutineScope.listenForWeatherForecastRequests(
         val channel = connectionFactory.newConnection().createChannel()
 
         listen(queue = weatherRequestQueue, channel = channel) { message ->
-            val request = MessageWeatherRequest.fromJson(message)
-            println("received weather forecast request for days from ${request.startDate} to ${request.endDate}")
-            val forecasts = dataRetrieverOrchestrator.getData(request.location, request.startDate, request.endDate)
+            try {
+                val request = MessageWeatherRequest.fromJson(message)
+                prometheusMeterRegistry.counter("weather_forecast_requests").increment()
 
-            if (forecasts.isNotEmpty()) {
-                println("publishing weather forecast results for days from ${request.startDate} to ${request.endDate}")
-                publishWeatherForecast(generateResultMessage(request.requestId, request.location, request.weatherPreference, forecasts))
+                println("received weather forecast request for days from ${request.startDate} to ${request.endDate}")
+                val forecasts = dataRetrieverOrchestrator.getData(request.location, request.startDate, request.endDate)
+
+                if (forecasts.isNotEmpty()) {
+                    println("publishing weather forecast results for days from ${request.startDate} to ${request.endDate}")
+                    publishWeatherForecast(generateResultMessage(request.requestId, request.location, request.weatherPreference, forecasts))
+                }
+
+                prometheusMeterRegistry.counter("success_weather_forecast_requests").increment()
+            } catch (e: Exception) {
+                prometheusMeterRegistry.counter("failed_weather_forecast_requests").increment()
+                logger.error("Error occurred when processing message \"$message\"", e)
             }
+
         }
     }
 }
@@ -123,7 +160,7 @@ fun generateResultMessage(id: Int, location: Location, preference: String, forec
     }
 
     val resultMessage = WeatherRequestResultMessage(
-        id, preference, forecasts[0]?.units, location, requestResults
+        id, preference, forecasts[0].units, location, requestResults
     )
     val r = resultMessage.toJson()
     return r

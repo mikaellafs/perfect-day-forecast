@@ -3,11 +3,16 @@ apply plugin: 'application'
 dependencies {
     implementation project(":components:data-collector")
     implementation project(":components:rabbit-support")
-    implementation("com.rabbitmq:amqp-client:5.19.0")
+    implementation 'com.rabbitmq:amqp-client:5.19.0'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2'
     implementation 'com.google.code.gson:gson:2.8.8'
     implementation 'io.lettuce:lettuce-core:6.2.6.RELEASE'
     implementation "ch.qos.logback:logback-classic:1.2.11"
+
+    implementation "io.ktor:ktor-server-core:1.6.8"
+    implementation "io.ktor:ktor-metrics-micrometer:1.6.8"
+    implementation "io.micrometer:micrometer-registry-prometheus:1.10.3"
+    implementation "io.ktor:ktor-server-netty:1.6.8"
 }
 
 application {
@@ -37,14 +42,26 @@ project.ext {
     RABBIT_REQUESTS_QUEUE = "collector-qu"
 }
 
-tasks.withType(JavaExec) {
-    doFirst {
-        environment REDIS_URL: project.REDIS_URL
-        environment RABBIT_URL: project.RABBIT_URL
-        environment WEATHER_FORECAST_API_URL: project.WEATHER_FORECAST_API_URL
-        environment RABBIT_ANALYZER_EXCHANGE: project.RABBIT_ANALYZER_EXCHANGE
-        environment RABBIT_ANALYZER_QUEUE: project.RABBIT_ANALYZER_QUEUE
-        environment RABBIT_REQUESTS_EXCHANGE: project.RABBIT_REQUESTS_EXCHANGE
-        environment RABBIT_REQUESTS_QUEUE: project.RABBIT_REQUESTS_QUEUE
+//tasks.withType(JavaExec) {
+//    doFirst {
+//        environment REDIS_URL: project.REDIS_URL
+//        environment RABBIT_URL: project.RABBIT_URL
+//        environment WEATHER_FORECAST_API_URL: project.WEATHER_FORECAST_API_URL
+//        environment RABBIT_ANALYZER_EXCHANGE: project.RABBIT_ANALYZER_EXCHANGE
+//        environment RABBIT_ANALYZER_QUEUE: project.RABBIT_ANALYZER_QUEUE
+//        environment RABBIT_REQUESTS_EXCHANGE: project.RABBIT_REQUESTS_EXCHANGE
+//        environment RABBIT_REQUESTS_QUEUE: project.RABBIT_REQUESTS_QUEUE
+//    }
+//}
+
+jar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    manifest {
+        attributes(
+                'Main-Class': 'com.example.perfectdayforecast.app.AppKt'
+        )
+    }
+    from {
+        configurations.compileClasspath.collect { it.isDirectory() ? it : zipTree(it) }
     }
 }

@@ -1,0 +1,46 @@
+version: '3'
+
+services:
+  data-analyzer:
+    image: perfect-day-forecast
+    container_name: perfectdayforecast-analyzer
+    ports:
+      - "8080:8080"
+    environment:
+      # PORT: 8080
+      ## APP: applications/data-analyzer/build/libs/data-analyzer.jar
+      APP: data-analyzer
+      RABBIT_URL: "amqp://rabbitmq:5672"
+      RABBIT_ANALYZER_EXCHANGE: "analyzer-ex"
+      RABBIT_ANALYZER_QUEUE: "analyzer-qu"
+      DATABASE_URL: "jdbc:postgresql://postgre:5432/perfectdayforecast?user=user&password=userpw"
+    networks:
+      perfectdayforecast-net:
+        aliases:
+          - dataanalyzer
+    
+  data-collector:
+    image: perfect-day-forecast
+    container_name: perfectdayforecast-collector
+    hostname: datacollector
+    ports:
+      - "8082:8082"
+    environment:
+      # PORT: 8082
+      ## APP: applications/data-collector/build/libs/data-collector.jar
+      APP: data-collector
+      REDIS_URL: "redis://redis:6379/0"
+      RABBIT_URL: "amqp://rabbitmq:5672"
+      WEATHER_FORECAST_API_URL: "https://api.open-meteo.com/v1/forecast?latitude={latitude}&longitude={longitude}&daily=weathercode,temperature_2m_max,temperature_2m_min,rain_sum,snowfall_sum,precipitation_sum,precipitation_probability_max&timezone=auto&start_date={start_date}&end_date={end_date}"
+      RABBIT_ANALYZER_EXCHANGE: "analyzer-ex"
+      RABBIT_ANALYZER_QUEUE: "analyzer-qu"
+      RABBIT_REQUESTS_EXCHANGE: "collector-ex"
+      RABBIT_REQUESTS_QUEUE: "collector-qu"
+    networks:
+      perfectdayforecast-net:
+        aliases:
+          - datacollector
+      
+networks:
+  perfectdayforecast-net:
+    driver: bridge

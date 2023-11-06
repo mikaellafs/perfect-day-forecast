@@ -4,6 +4,8 @@
 
 apply plugin: 'application'
 
+mainClassName = 'com.example.perfectdayforecast.app.AppKt'
+
 dependencies {
     implementation project(":components:data-analyzer")
     implementation project(":components:rabbit-support")
@@ -17,6 +19,11 @@ dependencies {
     implementation 'org.jetbrains.exposed:exposed-core:0.37.3'
 
     implementation "ch.qos.logback:logback-classic:1.2.11"
+
+    implementation "io.ktor:ktor-server-core:1.6.8"
+    implementation "io.ktor:ktor-metrics-micrometer:1.6.8"
+    implementation "io.micrometer:micrometer-registry-prometheus:1.10.3"
+    implementation "io.ktor:ktor-server-netty:1.6.8"
 }
 
 application {
@@ -43,11 +50,23 @@ project.ext {
     DATABASE_URL = "jdbc:postgresql://localhost:5432/perfectdayforecast?user=user&password=userpw"
 }
 
-tasks.withType(JavaExec) {
-    doFirst {
-        environment RABBIT_URL: project.RABBIT_URL
-        environment RABBIT_ANALYZER_EXCHANGE: project.RABBIT_ANALYZER_EXCHANGE
-        environment RABBIT_ANALYZER_QUEUE: project.RABBIT_ANALYZER_QUEUE
-        environment DATABASE_URL: project.DATABASE_URL
+//tasks.withType(JavaExec) {
+//    doFirst {
+//        environment RABBIT_URL: project.RABBIT_URL
+//        environment RABBIT_ANALYZER_EXCHANGE: project.RABBIT_ANALYZER_EXCHANGE
+//        environment RABBIT_ANALYZER_QUEUE: project.RABBIT_ANALYZER_QUEUE
+//        environment DATABASE_URL: project.DATABASE_URL
+//    }
+//}
+
+jar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    manifest {
+        attributes(
+                'Main-Class': 'com.example.perfectdayforecast.app.AppKt'
+        )
+    }
+    from {
+        configurations.compileClasspath.collect { it.isDirectory() ? it : zipTree(it) }
     }
 }
